@@ -1,0 +1,867 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Generador infinito de ejercicios</title>
+<script>
+window.MathJax = {
+  tex:{inlineMath:[['$','$'],['\\(','\\)']],displayMath:[['$$','$$']]},
+  svg:{fontCache:'global'},
+  options:{skipHtmlTags:['script','noscript','style','textarea','pre','code']}
+};
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" id="MathJax-script" async></script>
+<style>
+:root{
+  --bg:#f4f6fb; --card:#fff; --ink:#111827; --muted:#6b7280;
+  --brand:#4f46e5; --brand2:#7c3aed; --line:#e5e7eb;
+  --ok:#059669; --okbg:#ecfdf5; --err:#dc2626; --errbg:#fef2f2;
+  --warn:#b45309; --warnbg:#fffbeb;
+}
+*{box-sizing:border-box;}
+body{
+  margin:0; padding:24px 12px;
+  font-family:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  background:var(--bg); color:var(--ink); line-height:1.55;
+}
+.wrap{max-width:900px; margin:0 auto;}
+.card{
+  background:var(--card); border-radius:16px;
+  box-shadow:0 8px 28px rgba(17,24,39,0.08);
+  overflow:hidden; border:1px solid var(--line);
+}
+.card-header{
+  background:linear-gradient(135deg,var(--brand),var(--brand2));
+  color:#fff; padding:24px 28px;
+}
+.card-header h1{margin:0 0 4px 0; font-size:1.6rem; font-weight:700; letter-spacing:-0.01em;}
+.card-header p{margin:0; opacity:0.95; font-size:0.95rem;}
+.card-body{padding:24px 28px;}
+.btn-row{display:flex; justify-content:flex-end; margin-bottom:16px;}
+.btn-primary,.btn-ghost,.btn-soft{
+  font:inherit; cursor:pointer; border-radius:10px; padding:10px 16px;
+  border:1px solid transparent; transition:all 0.15s ease;
+}
+.btn-primary{background:var(--brand); color:#fff; border-color:var(--brand);}
+.btn-primary:hover{background:#4338ca;}
+.btn-ghost{background:transparent; color:var(--brand); border-color:var(--line);}
+.btn-ghost:hover{background:#f9fafb;}
+.btn-soft{background:#eef2ff; color:var(--brand); border-color:#e0e7ff;}
+.btn-soft:hover{background:#e0e7ff;}
+.input-row{display:flex; gap:8px; flex-wrap:wrap; margin:16px 0;}
+#respuesta{
+  flex:1 1 280px; padding:10px 14px; font:inherit; border-radius:10px;
+  border:1px solid var(--line); background:#fff; color:var(--ink);
+}
+#respuesta:focus{outline:none; border-color:var(--brand); box-shadow:0 0 0 3px rgba(79,70,229,0.15);}
+.feedback{border-radius:10px; padding:12px 14px; margin-top:8px; display:none; font-size:0.95rem;}
+.feedback.ok{display:block; background:var(--okbg); color:var(--ok); border:1px solid #a7f3d0;}
+.feedback.err{display:block; background:var(--errbg); color:var(--err); border:1px solid #fecaca;}
+.panel{border-radius:10px; padding:14px 16px; margin-top:12px; display:none;}
+.panel.visible{display:block;}
+.panel.pista{background:var(--warnbg); border:1px solid #fde68a; color:var(--warn);}
+.panel.explicacion{background:#f5f3ff; border:1px solid #ddd6fe; color:var(--brand2);}
+.marcador{
+  display:flex; gap:16px; align-items:center; margin-top:20px;
+  padding-top:16px; border-top:1px solid var(--line);
+  font-size:0.9rem; color:var(--muted); flex-wrap:wrap;
+}
+.marcador strong{color:var(--ink);}
+.kbd{
+  display:inline-block; padding:2px 6px; border-radius:4px;
+  background:#f3f4f6; border:1px solid var(--line);
+  font-size:0.8rem; font-family:ui-monospace,monospace; color:var(--ink);
+}
+#enunciado{
+  background:#fbfcfe; border:1px solid var(--line);
+  border-radius:10px; padding:16px 18px; min-height:60px;
+}
+#enunciado p{margin:0;}
+footer{text-align:center; color:var(--muted); font-size:0.85rem; margin-top:18px; padding:6px;}
+code{background:rgba(255,255,255,0.55); padding:1px 6px; border-radius:4px; font-family:ui-monospace,monospace;}
+@media(max-width:560px){
+  .card-header h1{font-size:1.3rem;}
+  .card-body{padding:16px;}
+  .input-row{flex-direction:column;}
+  .input-row button{width:100%;}
+  #respuesta{flex:1 1 auto;}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="card">
+    <div class="card-header">
+      <h1>Generador infinito de ejercicios</h1>
+      <p>Materia: Estadística Inferencial · Tema: Distribuciones muestrales, estimación, pruebas de hipótesis, chi-cuadrada y regresión lineal simple</p>
+    </div>
+    <div class="card-body">
+      <div class="btn-row">
+        <button class="btn-ghost" onclick="nuevoEjercicio()">Nuevo ejercicio</button>
+      </div>
+      <div id="enunciado"></div>
+      <div class="input-row">
+        <input id="respuesta" type="text" autocomplete="off" placeholder="Usa ^ para potencias y / para fracciones…">
+        <button class="btn-primary" onclick="verificar()">Verificar</button>
+        <button class="btn-soft" onclick="mostrarPista()">Pista</button>
+        <button class="btn-soft" onclick="mostrarExplicacion()">Explicación</button>
+      </div>
+      <div id="feedback" class="feedback"></div>
+      <div id="pistaBox" class="panel pista"></div>
+      <div id="explicacionBox" class="panel explicacion"></div>
+      <div class="marcador">
+        <span>Aciertos: <strong id="mArc">0</strong></span>
+        <span>Intentos: <strong id="mInt">0</strong></span>
+        <span><span class="kbd">Enter</span> = verificar · <span class="kbd">N</span> = nuevo</span>
+      </div>
+    </div>
+  </div>
+  <footer>Generador aleatorio educativo · Estadística Inferencial · Distribuciones muestrales, estimación, pruebas de hipótesis, chi-cuadrada y regresión lineal simple</footer>
+</div>
+<script>
+// ============ ESTADO ============
+var aciertos = 0, intentos = 0;
+var ejActual = null;
+
+// ============ UTILIDADES ============
+function escaparHTML(s){
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function normalizar(valor){
+  var s = String(valor).toLowerCase();
+  s = s.replace(/\$/g,'');
+  s = s.replace(/\\left/g,'').replace(/\\right/g,'');
+  s = s.replace(/\\,/g,'').replace(/\\;/g,'').replace(/\\quad/g,'').replace(/\\ /g,'');
+  s = s.replace(/·/g,'*').replace(/\s+/g,'');
+  s = s.replace(/\\dfrac/g,'\\frac');
+  s = s.replace(/\\cdot/g,'*').replace(/\\times/g,'*');
+  s = s.replace(/\\div/g,'/');
+  s = s.replace(/\\sin/g,'sin').replace(/\\cos/g,'cos').replace(/\\tan/g,'tan');
+  s = s.replace(/\\ln/g,'ln').replace(/\\pi/g,'pi');
+  s = s.replace(/²/g,'^2').replace(/³/g,'^3').replace(/⁴/g,'^4').replace(/⁵/g,'^5').replace(/⁶/g,'^6');
+  var prev = '';
+  while(prev !== s){ prev = s; s = s.replace(/_\{([^{}]*)\}/g, '_$1'); }
+  prev = '';
+  while(prev !== s){ prev = s; s = s.replace(/\\frac\{([^{}]*)\}\{([^{}]*)\}/g, '(($1)/($2))'); }
+  s = s.replace(/\{/g,'').replace(/\}/g,'');
+  s = s.replace(/\\/g,'');
+  s = s.replace(/\^\(([^()]*)\)/g, '^$1');
+  return s;
+}
+function sinParentesis(s){ return String(s).replace(/\(/g,'').replace(/\)/g,''); }
+function coincideTexto(entrada, acepta){
+  var ne = normalizar(entrada);
+  for(var i=0;i<acepta.length;i++){
+    var na = normalizar(acepta[i]);
+    if(ne === na) return true;
+    if(sinParentesis(ne) === sinParentesis(na)) return true;
+  }
+  return false;
+}
+function coincideAntiderivada(entrada, acepta){
+  var ne = normalizar(entrada).replace(/(\+c|-c)$/g,'');
+  for(var i=0;i<acepta.length;i++){
+    var na = normalizar(acepta[i]).replace(/(\+c|-c)$/g,'');
+    if(ne === na) return true;
+    if(sinParentesis(ne) === sinParentesis(na)) return true;
+  }
+  return false;
+}
+function aNumero(entrada){
+  var s = String(entrada).trim().replace(/,/g,'.').replace(/\$/g,'').replace(/\{/g,'').replace(/\}/g,'');
+  var m = s.match(/^(-?\d+(?:\.\d+)?)\/(-?\d+(?:\.\d+)?)$/);
+  if(m){
+    var num = parseFloat(m[1]), den = parseFloat(m[2]);
+    if(den === 0) return NaN;
+    return num/den;
+  }
+  if(/^-?\d+(?:\.\d+)?$/.test(s)) return parseFloat(s);
+  return NaN;
+}
+function tiposet(nodo, intento){
+  intento = intento || 0;
+  if(window.MathJax && window.MathJax.typesetPromise){
+    window.MathJax.typesetPromise([nodo]);
+    return;
+  }
+  if(intento < 40){ setTimeout(function(){ tiposet(nodo, intento+1); }, 200); }
+}
+
+// ============ GENERADOR ============
+function sel(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+function rnd(min, max){ return Math.floor(Math.random()*(max-min+1))+min; }
+
+/* ===== DISTRIBUCIONES MUESTRALES ===== */
+
+// V1: Error estandar de la media (numeric)
+function vErrorEstandarMedia(){
+  var sigma = sel([6,8,10,12,15,20,24,30]);
+  var n = sel([4,9,16,25,36,49,64,100]);
+  var ee = sigma / Math.sqrt(n);
+  var ctx = sel([
+    'En el departamento de finanzas de una empresa, se analiza la variabilidad de los rendimientos mensuales',
+    'Un ejecutivo de marketing estudia la dispersión de las respuestas a una campaña',
+    'En dirección de negocios internacionales, se evalúa la variabilidad de los costos de exportación'
+  ]);
+  var problema = ctx + '. La desviación estándar poblacional es $\\sigma = ' + sigma + '$ y se toma una muestra de tamaño $n = ' + n + '$. Calcula el error estándar de la media muestral $\\sigma_{\\bar{X}}$.';
+  return {
+    tipo:'numerica', problema:problema,
+    solucion:'El error estándar es $\\sigma_{\\bar{X}} = \\dfrac{\\sigma}{\\sqrt{n}} = \\dfrac{' + sigma + '}{\\sqrt{' + n + '}} = ' + ee + '$.',
+    respuestaLaTeX:'\\sigma_{\\bar{X}} = ' + ee,
+    acepta:[String(ee), ee.toFixed(2), ee.toFixed(4)],
+    respuesta:ee, tolerancia:0.001,
+    pista:'El error estándar de la media es $\\sigma_{\\bar{X}} = \\dfrac{\\sigma}{\\sqrt{n}}$. Refleja cuánto varían las medias muestrales de muestra a muestra.',
+    explicacion:'Paso 1. Identifica $\\sigma = ' + sigma + '$ y $n = ' + n + '$. Paso 2. Calcula $\\sqrt{n} = \\sqrt{' + n + '} = ' + Math.sqrt(n) + '$. Paso 3. Divide: $\\sigma_{\\bar{X}} = \\dfrac{' + sigma + '}{' + Math.sqrt(n) + '} = ' + ee + '$. Paso 4. Este valor es siempre menor que $\\sigma$, pues promediar reduce la variabilidad.'
+  };
+}
+
+// V2: Probabilidad sobre la media muestral (numeric)
+function vProbMedia(){
+  var mu = sel([50,100,200,500,1000]);
+  var sigma = sel([10,20,30,40,50]);
+  var n = sel([25,36,49,64,100]);
+  var ee = sigma/Math.sqrt(n);
+  var k = sel([1,2,3]);
+  var xbar = mu + k*ee;
+  var z = k;
+  var probs = {1:0.8413, 2:0.9772, 3:0.9987};
+  var prob = 1 - probs[k];
+  var ctx = sel([
+    'Un gerente de finanzas analiza el rendimiento promedio de un portafolio',
+    'En marketing, se estima el gasto promedio de los clientes en una tienda',
+    'Un directivo de negocios internacionales evalúa el tiempo promedio de entrega'
+  ]);
+  var problema = ctx + '. La media poblacional es $\\mu = ' + mu + '$ con $\\sigma = ' + sigma + '$. En una muestra de $n = ' + n + '$, calcula $P(\\bar{X} > ' + xbar + ')$.';
+  return {
+    tipo:'numerica', problema:problema,
+    solucion:'$P(\\bar{X} > ' + xbar + ') = P\\left(Z > \\dfrac{' + xbar + ' - ' + mu + '}{' + ee.toFixed(4) + '}\\right) = P(Z > ' + z + ') = ' + prob + '$.',
+    respuestaLaTeX:'P(\\bar{X} > ' + xbar + ') = ' + prob,
+    acepta:[String(prob), prob.toFixed(4), prob.toFixed(2)],
+    respuesta:prob, tolerancia:0.005,
+    pista:'Estandariza con $Z = \\dfrac{\\bar{X} - \\mu}{\\sigma/\\sqrt{n}}$ y usa la tabla normal estándar.',
+    explicacion:'Paso 1. Error estándar: $\\sigma_{\\bar{X}} = \\dfrac{' + sigma + '}{\\sqrt{' + n + '}} = ' + ee.toFixed(4) + '$. Paso 2. Estandariza: $Z = \\dfrac{' + xbar + ' - ' + mu + '}{' + ee.toFixed(4) + '} = ' + z + '$. Paso 3. $P(Z > ' + z + ') = 1 - \\Phi(' + z + ') = 1 - ' + probs[k] + ' = ' + prob + '$.'
+  };
+}
+
+// V3: Error estandar de la proporcion (numeric)
+function vErrorEstandarProp(){
+  var p = sel([0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8]);
+  var n = sel([100,200,400,500,1000]);
+  var ee = Math.sqrt(p*(1-p)/n);
+  var ctx = sel([
+    'En una empresa de marketing, se estima la proporción de clientes que responden a una campaña',
+    'Un ejecutivo de finanzas evalúa la proporción de créditos que se pagan a tiempo',
+    'En dirección internacional, se analiza la proporción de mercados que aceptan un producto'
+  ]);
+  var problema = ctx + '. La proporción poblacional es $p = ' + p + '$ y se toma una muestra de $n = ' + n + '$. Calcula el error estándar de la proporción muestral $\\sigma_{\\hat{p}}$.';
+  return {
+    tipo:'numerica', problema:problema,
+    solucion:'$\\sigma_{\\hat{p}} = \\sqrt{\\dfrac{p(1-p)}{n}} = \\sqrt{\\dfrac{' + p + '\\cdot' + (1-p) + '}{' + n + '}} = ' + ee.toFixed(4) + '$.',
+    respuestaLaTeX:'\\sigma_{\\hat{p}} = ' + ee.toFixed(4),
+    acepta:[ee.toFixed(4), ee.toFixed(3), ee.toFixed(2), String(ee)],
+    respuesta:ee, tolerancia:0.001,
+    pista:'El error estándar de la proporción es $\\sigma_{\\hat{p}} = \\sqrt{\\dfrac{p(1-p)}{n}}$. Requiere $np \\ge 5$ y $n(1-p) \\ge 5$.',
+    explicacion:'Paso 1. Identifica $p = ' + p + '$ y $n = ' + n + '$. Paso 2. Calcula $p(1-p) = ' + p + '\\cdot' + (1-p) + ' = ' + (p*(1-p)) + '$. Paso 3. Divide entre $n$: $\\dfrac{' + (p*(1-p)) + '}{' + n + '} = ' + (p*(1-p)/n) + '$. Paso 4. Toma raíz: $\\sigma_{\\hat{p}} = ' + ee.toFixed(4) + '$.'
+  };
+}
+
+// V4: Probabilidad sobre la proporcion muestral (numeric)
+function vProbProp(){
+  var p = sel([0.5,0.55,0.6,0.4,0.45]);
+  var n = sel([100,200,400]);
+  var ee = Math.sqrt(p*(1-p)/n);
+  var k = sel([1,2]);
+  var phat = p + k*ee;
+  var z = k;
+  var probs = {1:0.8413, 2:0.9772};
+  var prob = 1 - probs[k];
+  var ctx = sel([
+    'En una encuesta de marketing, se estima la proporción de clientes satisfechos',
+    'Un gerente de finanzas evalúa la proporción de facturas pagadas a tiempo',
+    'En negocios internacionales, se analiza la aceptación de un producto en un nuevo mercado'
+  ]);
+  var problema = ctx + '. Con $p = ' + p + '$ y $n = ' + n + '$, calcula $P(\\hat{p} > ' + phat.toFixed(4) + ')$.';
+  return {
+    tipo:'numerica', problema:problema,
+    solucion:'$P(\\hat{p} > ' + phat.toFixed(4) + ') = P\\left(Z > \\dfrac{' + phat.toFixed(4) + ' - ' + p + '}{' + ee.toFixed(4) + '}\\right) = P(Z > ' + z + ') = ' + prob + '$.',
+    respuestaLaTeX:'P(\\hat{p} > ' + phat.toFixed(4) + ') = ' + prob,
+    acepta:[String(prob), prob.toFixed(4), prob.toFixed(2)],
+    respuesta:prob, tolerancia:0.005,
+    pista:'Estandariza con $Z = \\dfrac{\\hat{p} - p}{\\sqrt{p(1-p)/n}}$ y usa la tabla normal.',
+    explicacion:'Paso 1. Error estándar: $\\sigma_{\\hat{p}} = \\sqrt{\\dfrac{' + p + '\\cdot' + (1-p) + '}{' + n + '}} = ' + ee.toFixed(4) + '$. Paso 2. Estandariza: $Z = \\dfrac{' + phat.toFixed(4) + ' - ' + p + '}{' + ee.toFixed(4) + '} = ' + z + '$. Paso 3. $P(Z > ' + z + ') = 1 - \\Phi(' + z + ') = ' + prob + '$.'
+  };
+}
+
+/* ===== ESTIMACION POR INTERVALO ===== */
+
+// V5: IC para la media con sigma conocida (numeric)
+function vICMedia(){
+  var mu = rnd(40,200);
+  var sigma = sel([5,10,12,15,20]);
+  var n = sel([16,25,36,49,64,100]);
+  var conf = sel([0.90,0.95,0.99]);
+  var z = conf === 0.90 ? 1.645 : conf === 0.95 ? 1.96 : 2.576;
+  var ee = sigma/Math.sqrt(n);
+  var me = z*ee;
+  var li = (mu - me).toFixed(2);
+  var ls = (mu + me).toFixed(2);
+  var ctx = sel([
+    'El departamento de finanzas estima el rendimiento promedio mensual de una inversión',
+    'En marketing, se estima el gasto promedio por cliente en una campaña',
+    'Un ejecutivo de negocios internacionales estima el costo promedio de un envío'
+  ]);
+  var problema = ctx + '. De una población con $\\sigma = ' + sigma + '$, se toma una muestra de $n = ' + n + '$ con $\\bar{x} = ' + mu + '$. Construye un intervalo de confianza del ' + (conf*100) + '% para $\\mu$. Escribe el límite inferior.';
+  return {
+    tipo:'numerica', problema:problema,
+    solucion:'El IC es $\\bar{x} \\pm z_{\\alpha/2}\\dfrac{\\sigma}{\\sqrt{n}} = ' + mu + ' \\pm ' + z + '\\cdot' + ee.toFixed(4) + ' = [' + li + ',\\ ' + ls + ']$.',
+    respuestaLaTeX:'LI = ' + li,
+    acepta:[li, String(mu-me), (mu-me).toFixed(2), (mu-me).toFixed(4)],
+    respuesta:mu-me, tolerancia:0.01,
+    pista:'El intervalo es $\\bar{x} \\pm z_{\\alpha/2}\\cdot\\dfrac{\\sigma}{\\sqrt{n}}$. Para ' + (conf*100) + '%, $z_{\\alpha/2} = ' + z + '$.',
+    explicacion:'Paso 1. Error estándar: $\\dfrac{\\sigma}{\\sqrt{n}} = \\dfrac{' + sigma + '}{\\sqrt{' + n + '}} = ' + ee.toFixed(4) + '$. Paso 2. Valor crítico $z = ' + z + '$. Paso 3. Margen de error: $' + z + '\\cdot' + ee.toFixed(4) + ' = ' + me.toFixed(4) + '$. Paso 4. IC: $[' + li + ',\\ ' + ls + ']$, límite inferior $' + li + '$.'
+  };
+}
+
+// V6: IC para la proporcion (numeric)
+function vICProp(){
+  var x = rnd(20,180);
+  var n = sel([100,200,250,400,500]);
+  var phat = x/n;
+  var conf = sel([0.95,0.99]);
+  var z = conf === 0.95 ? 1.96 : 2.576;
+  var ee = Math.sqrt(phat*(1-phat)/n);
+  var me = z*ee;
+  var li = (phat - me).toFixed(4);
+  var ctx = sel([
+    'En marketing, se estima la proporción de clientes que prefieren una marca',
+    'Un gerente de finanzas estima la proporción de créditos morosos',
+    'En dirección internacional, se estima la aceptación de un producto en un mercado extranjero'
+  ]);
+  var problema = ctx + '. En una muestra de $n = ' + n + '$, se observaron $x = ' + x + '$ éxitos. Construye un IC del ' + (conf*100) + '% para $p$. Escribe el límite inferior.';
+  return {
+    tipo:'numerica', problema:problema,
+    solucion:'$\\hat{p} = \\dfrac{' + x + '}{' + n + '} = ' + phat.toFixed(4) + '$. IC: $\\hat{p} \\pm ' + z + '\\sqrt{\\dfrac{\\hat{p}(1-\\hat{p})}{n}} = [' + li + ',\\ ' + (phat+me).toFixed(4) + ']$.',
+    respuestaLaTeX:'LI = ' + li,
+    acepta:[li, String(phat-me), (phat-me).toFixed(4), (phat-me).toFixed(2)],
+    respuesta:phat-me, tolerancia:0.005,
+    pista:'Primero calcula $\\hat{p} = x/n$, luego el error estándar $\\sqrt{\\hat{p}(1-\\hat{p})/n}$ y multiplica por $z$.',
+    explicacion:'Paso 1. $\\hat{p} = ' + x + '/' + n + ' = ' + phat.toFixed(4) + '$. Paso 2. Error estándar: $\\sqrt{\\dfrac{' + phat.toFixed(4) + '\\cdot' + (1-phat).toFixed(4) + '}{' + n + '}} = ' + ee.toFixed(4) + '$. Paso 3. Margen: $' + z + '\\cdot' + ee.toFixed(4) + ' = ' + me.toFixed(4) + '$. Paso 4. LI = $' + phat.toFixed(4) + ' - ' + me.toFixed(4) + ' = ' + li + '$.'
+  };
+}
+
+// V7: Tamano de muestra para estimar p (numeric)
+function vTamanoMuestra(){
+  var p = sel([0.5,0.3,0.4,0.6,0.7]);
+  var me = sel([0.03,0.05,0.04]);
+  var conf = sel([0.95,0.99]);
+  var z = conf === 0.95 ? 1.96 : 2.576;
+  var n0 = Math.pow(z,2)*p*(1-p)/(me*me);
+  var n = Math.ceil(n0);
+  var ctx = sel([
+    'En marketing, se necesita estimar la proporción de clientes que adoptarán un nuevo producto',
+    'Un gerente de finanzas necesita estimar la proporción de impagos en una cartera',
+    'En negocios internacionales, se planifica una encuesta de aceptación de marca'
+  ]);
+  var problema = ctx + '. Con $\\hat{p} = ' + p + '$, margen de error $E = ' + me + '$ y confianza del ' + (conf*100) + '%, calcula el tamaño muestral $n$.';
+  return {
+    tipo:'numerica', problema:problema,
+    solucion:'$n = \\dfrac{z^2\\hat{p}(1-\\hat{p})}{E^2} = \\dfrac{' + (z*z) + '\\cdot' + p + '\\cdot' + (1-p) + '}{' + (me*me) + '} = ' + n0.toFixed(2) + '\\approx ' + n + '$.',
+    respuestaLaTeX:'n = ' + n,
+    acepta:[String(n), n+'.0'],
+    respuesta:n, tolerancia:0.5,
+    pista:'Usa $n = \\dfrac{z^2\\hat{p}(1-\\hat{p})}{E^2}$ y redondea hacia arriba.',
+    explicacion:'Paso 1. $z = ' + z + '$, $\\hat{p} = ' + p + '$, $E = ' + me + '$. Paso 2. $z^2 = ' + (z*z) + '$. Paso 3. $\\hat{p}(1-\\hat{p}) = ' + (p*(1-p)) + '$. Paso 4. $n = \\dfrac{' + (z*z*p*(1-p)) + '}{' + (me*me) + '} = ' + n0.toFixed(2) + '$, se redondea a $' + n + '$.'
+  };
+}
+
+/* ===== MAXIMA VEROSIMILITUD ===== */
+
+// V8: MLE Bernoulli (numeric)
+function vBernoulliMLE(){
+  var datasets = [
+    {n:100, k:8, p:0.08},
+    {n:250, k:215, p:0.86},
+    {n:400, k:216, p:0.54},
+    {n:50, k:30, p:0.6},
+    {n:200, k:120, p:0.6},
+    {n:10, k:6, p:0.6},
+    {n:500, k:200, p:0.4}
+  ];
+  var d = sel(datasets);
+  var ctx = sel([
+    'En control de calidad de una empresa, se estima la proporción de productos defectuosos',
+    'Un equipo de marketing evalúa la tasa de conversión de una campaña',
+    'En finanzas, se estima la probabilidad de impago de un crédito'
+  ]);
+  var problema = ctx + '. En una muestra de $n = ' + d.n + '$, se observaron $x = ' + d.k + '$ éxitos. Suponiendo $X_i \\sim \\text{Bernoulli}(p)$, calcula el estimador MV $\\hat{p}$.';
+  return {
+    tipo:'numerica', problema:problema,
+    solucion:'$\\hat{p}_{MV} = \\dfrac{x}{n} = \\dfrac{' + d.k + '}{' + d.n + '} = ' + d.p + '$.',
+    respuestaLaTeX:'\\hat{p}_{MV} = ' + d.p,
+    acepta:[String(d.p), d.p.toFixed(2), d.p.toFixed(4), d.k + '/' + d.n],
+    respuesta:d.p, tolerancia:0.001,
+    pista:'Para Bernoulli, $\\hat{p}_{MV} = \\bar{X} = x/n$.',
+    explicacion:'Paso 1. Verosimilitud: $V(p) = p^x(1-p)^{n-x}$. Paso 2. Log: $\\ell = x\\ln p + (n-x)\\ln(1-p)$. Paso 3. Derivada: $\\dfrac{x}{p} - \\dfrac{n-x}{1-p} = 0$. Paso 4. Despeje: $\\hat{p} = x/n = ' + d.p + '$.'
+  };
+}
+
+// V9: MLE Exponencial (numeric)
+function vExpMLE(){
+  var datasets = [
+    {data:[2,4,3,5,1], sum:15, n:5, lam:1/3},
+    {data:[3,3,3,3], sum:12, n:4, lam:1/3},
+    {data:[1,2,3], sum:6, n:3, lam:0.5},
+    {data:[2,2,2], sum:6, n:3, lam:0.5},
+    {data:[4,6,8,2], sum:20, n:4, lam:0.2},
+    {data:[3,6,9], sum:18, n:3, lam:1/6}
+  ];
+  var d = sel(datasets);
+  var ctx = sel([
+    'En finanzas, se modela el tiempo entre impagos de una cartera',
+    'Un equipo de marketing mide el tiempo entre compras de clientes',
+    'En operaciones internacionales, se analiza el tiempo entre fallos de un equipo'
+  ]);
+  var dataStr = d.data.join(', ');
+  var problema = ctx + '. Los tiempos observados son: ' + dataStr + '. Suponiendo $X_i \\sim \\text{Exp}(\\lambda)$, calcula $\\hat{\\lambda}_{MV}$.';
+  return {
+    tipo:'numerica', problema:problema,
+    solucion:'$\\hat{\\lambda}_{MV} = \\dfrac{1}{\\bar{X}} = \\dfrac{n}{\\sum x_i} = \\dfrac{' + d.n + '}{' + d.sum + '} = ' + d.lam.toFixed(4) + '$.',
+    respuestaLaTeX:'\\hat{\\lambda}_{MV} = ' + d.lam.toFixed(4),
+    acepta:[d.lam.toFixed(4), d.lam.toFixed(2), String(d.lam), d.n + '/' + d.sum, '1/' + (d.sum/d.n)],
+    respuesta:d.lam, tolerancia:0.001,
+    pista:'Para exponencial, $\\hat{\\lambda}_{MV} = 1/\\bar{X} = n/\\sum x_i$.',
+    explicacion:'Paso 1. $\\sum x_i = ' + d.sum + '$, $n = ' + d.n + '$. Paso 2. $\\bar{X} = ' + d.sum + '/' + d.n + ' = ' + (d.sum/d.n) + '$. Paso 3. $\\hat{\\lambda} = 1/' + (d.sum/d.n) + ' = ' + d.lam.toFixed(4) + '$.'
+  };
+}
+
+// V10: MLE Poisson (numeric)
+function vPoissonMLE(){
+  var datasets = [
+    {data:[14,11,17,12,15,11], sum:80, n:6, lam:80/6},
+    {data:[3,5,7,5], sum:20, n:4, lam:5},
+    {data:[2,4,6], sum:12, n:3, lam:4},
+    {data:[8,12,10], sum:30, n:3, lam:10},
+    {data:[5,7,9,7,12], sum:40, n:5, lam:8}
+  ];
+  var d = sel(datasets);
+  var ctx = sel([
+    'Un banco estima el número de clientes que llegan por hora a una sucursal',
+    'En marketing, se cuenta el número de compras mensuales por cliente',
+    'En finanzas, se modela el número de siniestros mensuales por póliza'
+  ]);
+  var problema = ctx + '. En $n = ' + d.n + '$ observaciones los valores son: ' + d.data.join(', ') + '. Suponiendo $X_i \\sim \\text{Poisson}(\\lambda)$, calcula $\\hat{\\lambda}_{MV}$.';
+  return {
+    tipo:'numerica', problema:problema,
+    solucion:'$\\hat{\\lambda}_{MV} = \\bar{X} = \\dfrac{' + d.sum + '}{' + d.n + '} = ' + d.lam.toFixed(4) + '$.',
+    respuestaLaTeX:'\\hat{\\lambda}_{MV} = ' + d.lam.toFixed(4),
+    acepta:[d.lam.toFixed(4), d.lam.toFixed(2), String(d.lam), d.sum + '/' + d.n],
+    respuesta:d.lam, tolerancia:0.01,
+    pista:'Para Poisson, $\\hat{\\lambda}_{MV} = \\bar{X} = \\sum x_i / n$.',
+    explicacion:'Paso 1. $\\sum x_i = ' + d.sum + '$, $n = ' + d.n + '$. Paso 2. $\\hat{\\lambda} = ' + d.sum + '/' + d.n + ' = ' + d.lam.toFixed(4) + '$.'
+  };
+}
+
+/* ===== PRUEBAS DE HIPOTESIS ===== */
+
+// V11: Estadistico z para la media (numeric)
+function vzMedia(){
+  var mu0 = sel([100,250,500,1000]);
+  var xbar = mu0 + sel([5,10,15,20]);
+  var sigma = sel([20,30,40,50]);
+  var n = sel([25,36,49,100]);
+  var ee = sigma/Math.sqrt(n);
+  var z = (xbar - mu0)/ee;
+  var ctx = sel([
+    'Un gerente de calidad verifica si el contenido promedio de un producto coincide con el valor declarado',
+    'En finanzas, se prueba si el rendimiento medio de una inversión difiere del esperado',
+    'Un ejecutivo de marketing evalúa si el tiempo promedio de respuesta cambia respecto al estándar'
+  ]);
+  var problema = ctx + '. Se prueba $H_0: \\mu = ' + mu0 + '$ con $\\bar{x} = ' + xbar + '$, $\\sigma = ' + sigma + '$ y $n = ' + n + '$. Calcula el estadístico $z$.';
+  return {
+    tipo:'numerica', problema:problema,
+    solucion:'$z = \\dfrac{\\bar{x} - \\mu_0}{\\sigma/\\sqrt{n}} = \\dfrac{' + xbar + ' - ' + mu0 + '}{' + ee.toFixed(4) + '} = ' + z.toFixed(4) + '$.',
+    respuestaLaTeX:'z = ' + z.toFixed(2),
+    acepta:[z.toFixed(4), z.toFixed(2), z.toFixed(3), String(z)],
+    respuesta:z, tolerancia:0.01,
+    pista:'El estadístico es $z = \\dfrac{\\bar{x} - \\mu_0}{\\sigma/\\sqrt{n}}$.',
+    explicacion:'Paso 1. Error estándar: $\\sigma/\\sqrt{n} = ' + sigma + '/\\sqrt{' + n + '} = ' + ee.toFixed(4) + '$. Paso 2. Diferencia: $\\bar{x} - \\mu_0 = ' + (xbar-mu0) + '$. Paso 3. $z = ' + (xbar-mu0) + '/' + ee.toFixed(4) + ' = ' + z.toFixed(4) + '$.'
+  };
+}
+
+// V12: Estadistico t para la media (numeric)
+function vtMedia(){
+  var mu0 = sel([100,250,120]);
+  var xbar = mu0 + sel([-5,5,10,-10]);
+  var s = sel([10,15,20,27.3]);
+  var n = sel([9,16,25,10]);
+  var ee = s/Math.sqrt(n);
+  var t = (xbar - mu0)/ee;
+  var ctx = sel([
+    'Un fabricante afirma que la resistencia media de sus cables es $\\mu = ' + mu0 + '$ kg',
+    'Un gerente de calidad verifica si el peso promedio de bolsas es el declarado',
+    'En finanzas, se prueba si el retorno medio mensual difiere de un valor de referencia'
+  ]);
+  var problema = ctx + '. Con $\\bar{x} = ' + xbar + '$, $s = ' + s + '$, $n = ' + n + '$, calcula el estadístico $t$ para $H_0: \\mu = ' + mu0 + '$.';
+  return {
+    tipo:'numerica', problema:problema,
+    solucion:'$t = \\dfrac{\\bar{x} - \\mu_0}{s/\\sqrt{n}} = \\dfrac{' + xbar + ' - ' + mu0 + '}{' + ee.toFixed(4) + '} = ' + t.toFixed(4) + '$.',
+    respuestaLaTeX:'t = ' + t.toFixed(2),
+    acepta:[t.toFixed(4), t.toFixed(2), t.toFixed(3), String(t)],
+    respuesta:t, tolerancia:0.01,
+    pista:'Usa $t = \\dfrac{\\bar{x} - \\mu_0}{s/\\sqrt{n}}$ con $n-1$ grados de libertad cuando $\\sigma$ es desconocida.',
+    explicacion:'Paso 1. Error estándar estimado: $s/\\sqrt{n} = ' + s + '/\\sqrt{' + n + '} = ' + ee.toFixed(4) + '$. Paso 2. Diferencia: $' + (xbar-mu0) + '$. Paso 3. $t = ' + (xbar-mu0) + '/' + ee.toFixed(4) + ' = ' + t.toFixed(4) + '$ con ' + (n-1) + ' gl.'
+  };
+}
+
+// V13: Estadistico z para la proporcion (numeric)
+function vzProp(){
+  var p0 = sel([0.5,0.3,0.4,0.6]);
+  var n = sel([100,200,400,500]);
+  var x = Math.round(p0 * n) + sel([10,15,20,25]);
+  var phat = x/n;
+  var ee = Math.sqrt(p0*(1-p0)/n);
+  var z = (phat - p0)/ee;
+  var ctx = sel([
+    'En una encuesta preelectoral, se prueba si el apoyo a una iniciativa supera el 50%',
+    'Un gerente de marketing prueba si la preferencia por una marca cambia',
+    'En finanzas, se evalúa si la proporción de morosos aumenta'
+  ]);
+  var problema = ctx + '. Con $p_0 = ' + p0 + '$, $n = ' + n + '$ y $x = ' + x + '$ éxitos, calcula el estadístico $z$ para $H_0: p = ' + p0 + '$.';
+  return {
+    tipo:'numerica', problema:problema,
+    solucion:'$\\hat{p} = ' + x + '/' + n + ' = ' + phat.toFixed(4) + '$. $z = \\dfrac{\\hat{p} - p_0}{\\sqrt{p_0(1-p_0)/n}} = \\dfrac{' + (phat-p0).toFixed(4) + '}{' + ee.toFixed(4) + '} = ' + z.toFixed(4) + '$.',
+    respuestaLaTeX:'z = ' + z.toFixed(2),
+    acepta:[z.toFixed(4), z.toFixed(2), z.toFixed(3), String(z)],
+    respuesta:z, tolerancia:0.01,
+    pista:'Calcula $\\hat{p} = x/n$, luego $z = \\dfrac{\\hat{p} - p_0}{\\sqrt{p_0(1-p_0)/n}}$.',
+    explicacion:'Paso 1. $\\hat{p} = ' + x + '/' + n + ' = ' + phat.toFixed(4) + '$. Paso 2. Error estándar bajo $H_0$: $\\sqrt{' + p0 + '\\cdot' + (1-p0) + '/' + n + '} = ' + ee.toFixed(4) + '$. Paso 3. $z = ' + (phat-p0).toFixed(4) + '/' + ee.toFixed(4) + ' = ' + z.toFixed(4) + '$.'
+  };
+}
+
+// V14: Grados de libertad (numeric)
+function vGL(){
+  var n = rnd(10,50);
+  var gl = n - 1;
+  var ctx = sel([
+    'En un análisis de control de calidad, se plantea una prueba $t$ para la media',
+    'Un gerente de finanzas realiza una prueba de hipótesis sobre el rendimiento',
+    'En marketing, se evalúa una diferencia de medias con varianza desconocida'
+  ]);
+  var problema = ctx + '. Con una muestra de $n = ' + n + '$ y $\\sigma$ desconocida, ¿cuántos grados de libertad tiene la distribución $t$-Student?';
+  return {
+    tipo:'numerica', problema:problema,
+    solucion:'Los grados de libertad son $n - 1 = ' + n + ' - 1 = ' + gl + '$.',
+    respuestaLaTeX:'\\text{gl} = ' + gl,
+    acepta:[String(gl), gl + '.0'],
+    respuesta:gl, tolerancia:0.001,
+    pista:'Con $\\sigma$ desconocida, los grados de libertad son $n-1$.',
+    explicacion:'Paso 1. Se estima un parámetro ($\\sigma$ con $s$). Paso 2. Se pierde un grado de libertad. Paso 3. $\\text{gl} = n - 1 = ' + n + ' - 1 = ' + gl + '$.'
+  };
+}
+
+/* ===== CHI-CUADRADA ===== */
+
+// V15: Chi-cuadrada bondad de ajuste (numeric)
+function vChiBondad(){
+  var datasets = [
+    {obs:[100,60,36,20], esp:[70,20,12,98], chi:202.94},
+    {obs:[30,50,20,40,40,50,30,20], esp:[33.33,33.33,33.33,33.33,33.33,33.33,33.33,33.33], chi:17.58}
+  ];
+  var d = sel(datasets);
+  var ctx = sel([
+    'En dirección internacional, se compara la cuota de mercado de una filial con el patrón europeo',
+    'En marketing, se evalúa si el canal de venta se relaciona con la satisfacción del cliente',
+    'Un auditor verifica si los tipos de error contable dependen del departamento'
+  ]);
+  var obsStr = d.obs.join(', ');
+  var espStr = d.esp.map(function(e){return e.toFixed(2);}).join(', ');
+  var problema = ctx + '. Las frecuencias observadas son $[' + obsStr + ']$ y las esperadas son $[' + espStr + ']$. Calcula el estadístico $\\chi^2$ de bondad de ajuste.';
+  return {
+    tipo:'numerica', problema:problema,
+    solucion:'$\\chi^2 = \\sum \\dfrac{(o_i - e_i)^2}{e_i} = ' + d.chi + '$.',
+    respuestaLaTeX:'\\chi^2 = ' + d.chi,
+    acepta:[String(d.chi), d.chi.toFixed(2), d.chi.toFixed(4)],
+    respuesta:d.chi, tolerancia:0.05,
+    pista:'Suma $\\dfrac{(o_i - e_i)^2}{e_i}$ para cada categoría.',
+    explicacion:'Paso 1. Para cada celda calcula $(o_i - e_i)^2/e_i$. Paso 2. Suma todos los términos. Paso 3. El resultado es $\\chi^2 = ' + d.chi + '$.'
+  };
+}
+
+// V16: Frecuencia esperada en independencia (numeric)
+function vFreqEsp(){
+  var n = sel([300,240,180,120]);
+  var fila = sel([80,100,60]);
+  var col = sel([60,100,80,70]);
+  var eij = (fila * col / n);
+  var ctx = sel([
+    'En marketing, se analiza la relación entre canal de venta y satisfacción',
+    'Un gerente de RRHH evalúa si el tipo de contrato se relaciona con el desempeño',
+    'En dirección internacional, se compara el estilo de liderazgo entre filiales'
+  ]);
+  var problema = ctx + '. En una tabla de contingencia con $n = ' + n + '$, el total de fila es ' + fila + ' y el de columna es ' + col + '. Calcula la frecuencia esperada $e_{ij}$.';
+  return {
+    tipo:'numerica', problema:problema,
+    solucion:'$e_{ij} = \\dfrac{(\\text{fila})(\\text{col})}{n} = \\dfrac{' + fila + '\\cdot' + col + '}{' + n + '} = ' + eij.toFixed(2) + '$.',
+    respuestaLaTeX:'e_{ij} = ' + eij.toFixed(2),
+    acepta:[eij.toFixed(2), eij.toFixed(4), String(eij)],
+    respuesta:eij, tolerancia:0.01,
+    pista:'$e_{ij} = \\dfrac{(\\text{total fila})(\\text{total columna})}{n}$.',
+    explicacion:'Paso 1. Total de fila = ' + fila + '. Paso 2. Total de columna = ' + col + '. Paso 3. $n = ' + n + '$. Paso 4. $e_{ij} = ' + fila + '\\cdot' + col + '/' + n + ' = ' + eij.toFixed(2) + '$.'
+  };
+}
+
+// V17: Grados de libertad chi-cuadrada independencia (numeric)
+function vChiGL(){
+  var m = rnd(2,4);
+  var k = rnd(2,4);
+  var gl = (m-1)*(k-1);
+  var ctx = sel([
+    'En un estudio de marketing, se cruza canal de venta con nivel de satisfacción',
+    'En dirección de empresas, se analiza tipo de contrato contra desempeño',
+    'Un auditor verifica si el tipo de error depende del departamento'
+  ]);
+  var problema = ctx + '. Para una tabla de contingencia de ' + m + ' filas por ' + k + ' columnas, ¿cuántos grados de libertad tiene la prueba $\\chi^2$ de independencia?';
+  return {
+    tipo:'numerica', problema:problema,
+    solucion:'$\\text{gl} = (m-1)(k-1) = (' + m + '-1)(' + k + '-1) = ' + gl + '$.',
+    respuestaLaTeX:'\\text{gl} = ' + gl,
+    acepta:[String(gl), gl + '.0'],
+    respuesta:gl, tolerancia:0.001,
+    pista:'Los grados de libertad son $(m-1)(k-1)$ donde $m$ = filas y $k$ = columnas.',
+    explicacion:'Paso 1. $m = ' + m + '$ filas, $k = ' + k + '$ columnas. Paso 2. $m-1 = ' + (m-1) + '$. Paso 3. $k-1 = ' + (k-1) + '$. Paso 4. $\\text{gl} = ' + (m-1) + '\\cdot' + (k-1) + ' = ' + gl + '$.'
+  };
+}
+
+/* ===== REGRESION LINEAL SIMPLE ===== */
+
+// V18: Pendiente por minimos cuadrados (numeric)
+function vPendiente(){
+  var a = rnd(1,5);
+  var b = rnd(0,4);
+  var x0 = rnd(1,3);
+  var pts = [];
+  for(var i=0;i<3;i++){ var x = x0+i, y = a*x+b; pts.push('(' + x + ',' + y + ')'); }
+  var ctx = sel([
+    'En finanzas, se modela el costo en función del volumen de producción',
+    'En marketing, se analiza la relación entre inversión publicitaria y ventas',
+    'Un ejecutivo de negocios internacionales estudia la relación entre precio y demanda'
+  ]);
+  var problema = ctx + '. Con tres puntos colineales ' + pts.join(',  ') + ', calcula la pendiente $\\beta_1$ por mínimos cuadrados.';
+  return {
+    tipo:'numerica', problema:problema,
+    solucion:'$\\beta_1 = ' + a + '$.',
+    respuestaLaTeX:'\\beta_1 = ' + a,
+    acepta:[String(a), a + '.0'],
+    respuesta:a, tolerancia:0.001,
+    pista:'Para puntos colineales, $\\beta_1 = \\dfrac{y_2 - y_1}{x_2 - x_1}$.',
+    explicacion:'Paso 1. Toma dos puntos. Paso 2. $\\Delta y = y_2 - y_1$. Paso 3. $\\Delta x = x_2 - x_1$. Paso 4. $\\beta_1 = \\Delta y / \\Delta x = ' + a + '$.'
+  };
+}
+
+// V19: Intercepto (numeric)
+function vIntercepto(){
+  var a = rnd(1,5);
+  var b = rnd(0,4);
+  var x0 = rnd(1,3);
+  var pts = [];
+  for(var i=0;i<3;i++){ var x = x0+i, y = a*x+b; pts.push('(' + x + ',' + y + ')'); }
+  var ctx = sel([
+    'En marketing, se ajusta un modelo de ventas en función de la publicidad',
+    'Un gerente de finanzas modela el costo frente al número de unidades',
+    'En dirección internacional, se estima el margen frente al costo unitario'
+  ]);
+  var problema = ctx + '. Con $\\beta_1 = ' + a + '$ y puntos ' + pts.join(',  ') + ', calcula el intercepto $\\beta_0$.';
+  return {
+    tipo:'numerica', problema:problema,
+    solucion:'$\\beta_0 = \\bar{y} - \\beta_1\\bar{x} = ' + b + '$.',
+    respuestaLaTeX:'\\beta_0 = ' + b,
+    acepta:[String(b), b + '.0'],
+    respuesta:b, tolerancia:0.001,
+    pista:'Usa $\\beta_0 = \\bar{y} - \\beta_1 \\bar{x}$.',
+    explicacion:'Paso 1. Calcula $\\bar{x}$ y $\\bar{y}$. Paso 2. Sustituye en $\\beta_0 = \\bar{y} - \\beta_1\\bar{x}$ con $\\beta_1 = ' + a + '$. Paso 3. $\\beta_0 = ' + b + '$.'
+  };
+}
+
+// V20: Prediccion (numeric)
+function vPrediccion(){
+  var a = rnd(1,4);
+  var b = rnd(1,6);
+  var x = rnd(2,6);
+  var y = a*x + b;
+  var ctx = sel([
+    'En finanzas, se predice el costo para un nivel de producción dado',
+    'En marketing, se proyecta el volumen de ventas para un presupuesto publicitario',
+    'Un ejecutivo internacional estima la demanda para un precio determinado'
+  ]);
+  var problema = ctx + '. La recta ajustada es $\\hat{y} = ' + a + 'x + ' + b + '$. Predice $\\hat{y}$ cuando $x = ' + x + '$.';
+  return {
+    tipo:'numerica', problema:problema,
+    solucion:'$\\hat{y} = ' + a + '\\cdot' + x + ' + ' + b + ' = ' + y + '$.',
+    respuestaLaTeX:'\\hat{y} = ' + y,
+    acepta:[String(y), y + '.0'],
+    respuesta:y, tolerancia:0.001,
+    pista:'Sustituye $x$ en la recta y opera.',
+    explicacion:'Paso 1. Sustituye $x = ' + x + '$. Paso 2. Multiplica: $' + a + '\\cdot' + x + ' = ' + (a*x) + '$. Paso 3. Suma: $' + (a*x) + ' + ' + b + ' = ' + y + '$.'
+  };
+}
+
+// V21: Coeficiente de determinacion R^2 (numeric)
+function vR2(){
+  var rOpciones = [
+    {r:'0.8', r2:'0.64', rn:0.8, r2n:0.64},
+    {r:'0.9', r2:'0.81', rn:0.9, r2n:0.81},
+    {r:'0.6', r2:'0.36', rn:0.6, r2n:0.36},
+    {r:'0.7', r2:'0.49', rn:0.7, r2n:0.49},
+    {r:'0.5', r2:'0.25', rn:0.5, r2n:0.25}
+  ];
+  var opt = sel(rOpciones);
+  var ctx = sel([
+    'En un análisis de marketing, se obtiene $r = ' + opt.r + '$ entre publicidad y ventas',
+    'En finanzas, se reporta $r = ' + opt.r + '$ entre dos activos',
+    'En dirección internacional, se halla $r = ' + opt.r + '$ entre costo y margen'
+  ]);
+  var problema = ctx + '. Calcula el coeficiente de determinación $R^2$.';
+  return {
+    tipo:'numerica', problema:problema,
+    solucion:'$R^2 = r^2 = ' + opt.r + '^2 = ' + opt.r2 + '$.',
+    respuestaLaTeX:'R^2 = ' + opt.r2,
+    acepta:[opt.r2, String(opt.r2n), opt.r2n.toFixed(2)],
+    respuesta:opt.r2n, tolerancia:0.001,
+    pista:'$R^2 = r^2$ en regresión lineal simple.',
+    explicacion:'Paso 1. $r = ' + opt.r + '$. Paso 2. $r^2 = ' + opt.r2 + '$. Paso 3. El modelo explica el ' + (opt.r2n*100) + '% de la variabilidad.'
+  };
+}
+
+// V22: Coeficiente de correlacion r (numeric)
+function vCorrelacion(){
+  var datasets = [
+    {n:3, sx:6, sy:15, sxy:34, sx2:14, sy2:83, r:1, rt:'1'},
+    {n:4, sx:10, sy:20, sxy:60, sx2:30, sy2:120, r:1, rt:'1'},
+    {n:4, sx:10, sy:20, sxy:40, sx2:30, sy2:120, r:-1, rt:'-1'},
+    {n:4, sx:10, sy:20, sxy:55, sx2:30, sy2:120, r:0.5, rt:'0.5'},
+    {n:5, sx:15, sy:25, sxy:83, sx2:55, sy2:135, r:0.8, rt:'0.8'},
+    {n:10, sx:55, sy:55, sxy:352, sx2:385, sy2:385, r:0.6, rt:'0.6'}
+  ];
+  var d = sel(datasets);
+  var ctx = sel([
+    'En un estudio de marketing, se analizan ventas y publicidad',
+    'En finanzas, se evalúa la relación entre dos variables económicas',
+    'En dirección internacional, se estudia la asociación entre precio y demanda'
+  ]);
+  var problema = ctx + '. Con $n=' + d.n + '$, $\\sum x=' + d.sx + '$, $\\sum y=' + d.sy + '$, $\\sum xy=' + d.sxy + '$, $\\sum x^2=' + d.sx2 + '$, $\\sum y^2=' + d.sy2 + '$, calcula el coeficiente de correlación $r$.';
+  var num = d.n*d.sxy - d.sx*d.sy;
+  var dx2 = d.n*d.sx2 - d.sx*d.sx;
+  var dy2 = d.n*d.sy2 - d.sy*d.sy;
+  return {
+    tipo:'numerica', problema:problema,
+    solucion:'$r = \\dfrac{n\\sum xy - \\sum x\\sum y}{\\sqrt{n\\sum x^2 - (\\sum x)^2}\\sqrt{n\\sum y^2 - (\\sum y)^2}} = \\dfrac{' + num + '}{\\sqrt{' + dx2 + '}\\sqrt{' + dy2 + '}} = ' + d.rt + '$.',
+    respuestaLaTeX:'r = ' + d.rt,
+    acepta:[d.rt, String(d.r), d.r.toFixed(2), d.r.toFixed(1)],
+    respuesta:d.r, tolerancia:0.001,
+    pista:'Aplica la fórmula $r = \\dfrac{n\\sum xy - \\sum x\\sum y}{\\sqrt{n\\sum x^2-(\\sum x)^2}\\sqrt{n\\sum y^2-(\\sum y)^2}}$.',
+    explicacion:'Paso 1. Numerador: $' + num + '$. Paso 2. Factor $x$: $' + dx2 + '$. Paso 3. Factor $y$: $' + dy2 + '$. Paso 4. $r = ' + d.rt + '$.'
+  };
+}
+
+// V23: Estadistico t para la utilidad del modelo (numeric)
+function vTutilidad(){
+  var combos = [
+    {b1:2, syx:2, sxx:4, sb:1, t:2},
+    {b1:3, syx:3, sxx:9, sb:1, t:3},
+    {b1:4, syx:2, sxx:4, sb:1, t:4},
+    {b1:5, syx:2, sxx:1, sb:2, t:2.5},
+    {b1:2, syx:4, sxx:4, sb:2, t:1},
+    {b1:3, syx:6, sxx:9, sb:2, t:1.5}
+  ];
+  var c = sel(combos);
+  var ctx = sel([
+    'En marketing, se prueba la utilidad de un modelo de ventas',
+    'En finanzas, se evalúa si la pendiente del modelo es significativa',
+    'En dirección internacional, se contrasta $H_0: \\beta_1 = 0$'
+  ]);
+  var problema = ctx + '. Con $b_1 = ' + c.b1 + '$, $s_{yx} = ' + c.syx + '$, $\\sum(x-\\bar{x})^2 = ' + c.sxx + '$, calcula $t = b_1/s_b$.';
+  return {
+    tipo:'numerica', problema:problema,
+    solucion:'$s_b = \\dfrac{s_{yx}}{\\sqrt{\\sum(x-\\bar{x})^2}} = ' + c.sb + '$. $t = \\dfrac{' + c.b1 + '}{' + c.sb + '} = ' + c.t + '$.',
+    respuestaLaTeX:'t = ' + c.t,
+    acepta:[String(c.t), c.t.toFixed(2), c.t.toFixed(3)],
+    respuesta:c.t, tolerancia:0.01,
+    pista:'Primero $s_b = s_{yx}/\\sqrt{\\sum(x-\\bar{x})^2}$, luego $t = b_1/s_b$.',
+    explicacion:'Paso 1. $\\sqrt{\\sum(x-\\bar{x})^2} = \\sqrt{' + c.sxx + '} = ' + Math.sqrt(c.sxx) + '$. Paso 2. $s_b = ' + c.syx + '/' + Math.sqrt(c.sxx) + ' = ' + c.sb + '$. Paso 3. $t = ' + c.b1 + '/' + c.sb + ' = ' + c.t + '$.'
+  };
+}
+
+function gen(){
+  var variantes = [vErrorEstandarMedia, vProbMedia, vErrorEstandarProp, vProbProp, vICMedia, vICProp, vTamanoMuestra, vBernoulliMLE, vExpMLE, vPoissonMLE, vzMedia, vtMedia, vzProp, vGL, vChiBondad, vFreqEsp, vChiGL, vPendiente, vIntercepto, vPrediccion, vR2, vCorrelacion, vTutilidad];
+  var idx = Math.floor(Math.random()*variantes.length);
+  return variantes[idx]();
+}
+
+// ============ UI ============
+function nuevoEjercicio(){
+  ejActual = gen();
+  var en = document.getElementById('enunciado');
+  en.innerHTML = '<p>' + ejActual.problema + '</p>';
+  tiposet(en);
+  var fb = document.getElementById('feedback');
+  fb.className = 'feedback';
+  fb.innerHTML = '';
+  document.getElementById('pistaBox').className = 'panel pista';
+  document.getElementById('explicacionBox').className = 'panel explicacion';
+  document.getElementById('respuesta').value = '';
+  setTimeout(function(){ document.getElementById('respuesta').focus(); }, 50);
+}
+function verificar(){
+  if(!ejActual) return;
+  var entrada = document.getElementById('respuesta').value.trim();
+  if(!entrada) return;
+  intentos++;
+  document.getElementById('mInt').textContent = intentos;
+  var ok = false;
+  if(ejActual.tipo === 'numerica'){
+    var num = aNumero(entrada);
+    if(!isNaN(num) && Math.abs(num - ejActual.respuesta) <= ejActual.tolerancia){ ok = true; }
+    else { ok = coincideTexto(entrada, ejActual.acepta); }
+  } else {
+    ok = coincideTexto(entrada, ejActual.acepta);
+  }
+  var fb = document.getElementById('feedback');
+  if(ok){
+    aciertos++;
+    document.getElementById('mArc').textContent = aciertos;
+    fb.className = 'feedback ok';
+    fb.innerHTML = '<div><strong>¡Correcto!</strong></div>' +
+      '<div>Escribiste: <code>' + escaparHTML(entrada) + '</code></div>' +
+      '<div>En notación matemática: $' + ejActual.respuestaLaTeX + '$</div>';
+  } else {
+    fb.className = 'feedback err';
+    fb.innerHTML = '<div>✗ Todavía no. Revisa tu procedimiento o pide una pista.</div>';
+  }
+  tiposet(fb);
+}
+function mostrarPista(){
+  if(!ejActual) return;
+  var p = document.getElementById('pistaBox');
+  p.innerHTML = '<p>' + ejActual.pista + '</p>';
+  p.className = 'panel pista visible';
+  tiposet(p);
+}
+function mostrarExplicacion(){
+  if(!ejActual) return;
+  var e = document.getElementById('explicacionBox');
+  e.innerHTML = '<p>' + ejActual.explicacion + '</p>';
+  e.className = 'panel explicacion visible';
+  tiposet(e);
+}
+document.getElementById('respuesta').addEventListener('keydown', function(ev){
+  if(ev.key === 'Enter'){ ev.preventDefault(); verificar(); }
+});
+document.addEventListener('keydown', function(ev){
+  var tag = document.activeElement.tagName;
+  if((ev.key === 'n' || ev.key === 'N') && tag !== 'INPUT' && tag !== 'TEXTAREA'){ nuevoEjercicio(); }
+});
+nuevoEjercicio();
+</script>
+</body>
+</html>
